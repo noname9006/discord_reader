@@ -11,10 +11,13 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
+
+// Tracks whether a scrape is currently in progress
+let _scraping = false;
 
 /**
  * Toggle the overlay panel.
@@ -125,14 +128,20 @@ function _buildPanel() {
   statusArea.textContent = "Idle — press Scrape to begin.";
   messagesPane.appendChild(statusArea);
 
-  // "Scrape this channel" button (wired in Phase 4)
+  // "Scrape this channel" button — toggles between start and stop
   const scrapeBtn = document.createElement("button");
   scrapeBtn.className = "dr-scrape-btn";
   scrapeBtn.id = "dr-scrape-btn";
   scrapeBtn.textContent = "Scrape this channel";
-  scrapeBtn.addEventListener("click", () => {
-    // Placeholder — will be wired up in Phase 4
-    console.log("[Discord Reader] Scrape button clicked — coming in Phase 4.");
+  scrapeBtn.addEventListener("click", async () => {
+    if (_scraping) {
+      _scraping = false;
+      ScrapeController.stop();
+    } else {
+      _scraping = true;
+      await ScrapeController.start({ defaultDays: 7 });
+      _scraping = false;
+    }
   });
   messagesPane.appendChild(scrapeBtn);
 

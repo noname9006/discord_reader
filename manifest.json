@@ -24,7 +24,9 @@
         "content/discord_selectors.js",
         "content/scraper.js",
         "content/scroller.js",
+        "storage/db.js",
         "ui/panel.js",
+        "content/scrape_controller.js",
         "content/overlay.js",
         "content/index.js"
       ],

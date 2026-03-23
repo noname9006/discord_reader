@@ -41,13 +41,14 @@ discord_reader/
 │   ├── overlay.js              # Builds and toggles the overlay panel DOM
 │   ├── scraper.js              # Reads visible messages from the Discord DOM
 │   ├── scroller.js             # Auto-scroll controller (walks chat upward)
+│   ├── scrape_controller.js    # Orchestrates scrape flow (scraper + scroller + DB + UI)
 │   └── discord_selectors.js    # All Discord CSS selectors — single place to fix
 ├── storage/
 │   └── db.js                   # IndexedDB wrapper (guilds / channels / messages)
 ├── ui/
 │   ├── panel.html              # Reference template (not loaded directly)
 │   ├── panel.css               # Overlay styles (injected as content-script CSS)
-│   └── panel.js                # Render helpers: renderGuilds / renderChannels / renderStatus
+│   └── panel.js                # Render helpers: renderGuilds / renderChannels / renderStatus / setScrapeButtonState
 └── icons/
     └── icon128.png             # Extension icon (128×128)
 ```
@@ -59,12 +60,21 @@ discord_reader/
 | Phase | Status | Description |
 |---|---|---|
 | **1 — Skeleton** | ✅ Complete | Manifest, content script, hotkey, overlay toggle, all module stubs |
-| **2 — Storage** | 🔜 Upcoming | IndexedDB integration tests, read/write flows |
+| **2 — Wire Scraper + Scroller to Storage** | ✅ Complete | `scrape_controller.js` orchestrates scrape flow; scrape button wired with live progress and stop support; `DB.getLastMessageId()` added |
 | **3 — Scraper** | 🔜 Upcoming | Read guild/channel/message data from live Discord DOM |
 | **4 — Scroller** | 🔜 Upcoming | Auto-scroll, stop conditions (date / last saved ID) |
 | **5 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
 | **6 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
 | **7 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 2 added
+- `content/scrape_controller.js` — orchestrates scrape flow (scraper + scroller + DB + UI)
+- Wired scrape button in overlay (replaces console.log placeholder)
+- Live progress updates in status pane ("Scraping… N messages saved")
+- Stop/resume button state via `setScrapeButtonState()` in `ui/panel.js`
+- `DB.getLastMessageId()` — returns highest snowflake ID for a channel
+- `storage/db.js` added to content scripts in `manifest.json`
+- `scroller.js` `_step()` made `async` so `onBatch` DB writes complete before next scroll step
 
 ---
 
