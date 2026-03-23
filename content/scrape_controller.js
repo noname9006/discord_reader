@@ -12,7 +12,7 @@
  *   setScrapeButtonState() — ui/panel.js
  */
 
-/* global getCurrentContext, ScrollController, DB, renderStatus, setScrapeButtonState */
+/* global getCurrentContext, ScrollController, DB, renderStatus, setScrapeButtonState, NavController */
 
 const ScrapeController = (() => {
   /** @type {ScrollController|null} */
@@ -100,6 +100,9 @@ const ScrapeController = (() => {
         onComplete: () => {
           renderStatus(`Done — ${totalSaved} messages saved for #${channelName}`);
           _teardown();
+          NavController.refreshChannels().catch(err =>
+            console.error("[Discord Reader] NavController refresh error:", err)
+          );
         },
 
         onError: (err) => {

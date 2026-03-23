@@ -188,3 +188,14 @@
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
+
+/* ── Message count badges ────────────────────────────────────────────────────── */
+#discord-reader-root .dr-msg-count {
+  font-size: 11px;
+  color: #72767d;
+  margin-left: 4px;
+}
+
+#discord-reader-root li.active .dr-msg-count {
+  color: #b9bbbe;
+}

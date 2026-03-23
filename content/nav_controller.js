@@ -7,7 +7,7 @@
  */
 
 /* global SELECTORS, readGuilds, readChannels, getActiveGuildId, getActiveChannelId,
-          renderGuilds, renderChannels, renderStatus */
+          renderGuilds, renderChannels, renderStatus, DB, ScrapeController */
 
 const NavController = (() => {
   // Internal map: guild/channel ID → DOM element reference (for click navigation)
@@ -50,23 +50,25 @@ const NavController = (() => {
     const list = document.getElementById('dr-guilds-list');
     if (!list) return;
 
-    if (!list._drNavDelegated) {
-      list._drNavDelegated = true;
-      list.addEventListener('click', (e) => {
-        const li = e.target.closest('li[data-guild-id]');
-        if (li) _navigateToGuild(li.dataset.guildId);
-      });
+    if (list._navDelegateHandler) {
+      list.removeEventListener('click', list._navDelegateHandler);
     }
+    list._navDelegateHandler = (e) => {
+      const li = e.target.closest('li[data-guild-id]');
+      if (li) _navigateToGuild(li.dataset.guildId);
+    };
+    list.addEventListener('click', list._navDelegateHandler);
   }
 
   /**
    * Populate the Channels pane with text channels for the currently active guild.
+   * Fetches saved message counts from DB and shows them as badges.
    * Wires click handlers via event delegation so clicking a channel navigates
-   * Discord there.
+   * Discord there and starts a scrape.
    *
    * @param {string} [guildId] — if omitted, uses getActiveGuildId()
    */
-  function refreshChannels(guildId) {
+  async function refreshChannels(guildId) {
     const targetGuildId = guildId || getActiveGuildId();
     const channels = readChannels(targetGuildId);
     const activeChannelId = getActiveChannelId();
@@ -74,24 +76,47 @@ const NavController = (() => {
     // Store element references
     _channelElements = new Map(channels.map(c => [c.id, c.element]));
 
-    renderChannels(channels.map(c => ({ id: c.id, guildId: c.guildId, name: c.name })));
+    // Fetch saved message counts for each channel
+    await DB.init();
+    const counts = await Promise.all(
+      channels.map(c => DB.getMessageCountByChannel(c.id))
+    );
+    const channelData = channels.map((c, i) => ({
+      id: c.id,
+      guildId: c.guildId,
+      name: c.name,
+      count: counts[i],
+    }));
+
+    renderChannels(channelData);
 
     // Highlight active channel
     if (activeChannelId) {
       _highlightActiveChannel(activeChannelId);
     }
 
-    // Wire navigation via event delegation on the list container
+    // Wire navigation + scrape via event delegation on the list container
     const list = document.getElementById('dr-channels-list');
     if (!list) return;
 
-    if (!list._drNavDelegated) {
-      list._drNavDelegated = true;
-      list.addEventListener('click', (e) => {
-        const li = e.target.closest('li[data-channel-id]');
-        if (li) _navigateToChannel(li.dataset.channelId);
-      });
+    if (list._navDelegateHandler) {
+      list.removeEventListener('click', list._navDelegateHandler);
     }
+    list._navDelegateHandler = (e) => {
+      const li = e.target.closest('li[data-channel-id]');
+      if (!li) return;
+      const channelId = li.dataset.channelId;
+      if (channelId === getActiveChannelId()) {
+        ScrapeController.start({ defaultDays: 7 });
+      } else {
+        _navigateToChannel(channelId);
+        // Allow 800ms for Discord to complete navigation before scraping
+        setTimeout(() => {
+          ScrapeController.start({ defaultDays: 7 });
+        }, 800);
+      }
+    };
+    list.addEventListener('click', list._navDelegateHandler);
   }
 
   /**
@@ -143,7 +168,9 @@ const NavController = (() => {
 
     // After a short delay for Discord to render channels, refresh the pane
     setTimeout(() => {
-      refreshChannels(guildId);
+      refreshChannels(guildId).catch(err =>
+        console.error("[Discord Reader] NavController refresh error:", err)
+      );
       _highlightActiveGuild(guildId);
     }, 500);
   }
@@ -189,7 +216,9 @@ const NavController = (() => {
         const newChannelId = getActiveChannelId();
 
         // Re-read and re-render channels (guild may have changed)
-        refreshChannels(newGuildId);
+        refreshChannels(newGuildId).catch(err =>
+          console.error("[Discord Reader] NavController refresh error:", err)
+        );
 
         // Update active highlights
         if (newGuildId) _highlightActiveGuild(newGuildId);
@@ -214,7 +243,9 @@ const NavController = (() => {
         // Refresh the channels pane if panel is visible
         const panel = document.getElementById('discord-reader-root');
         if (panel && !panel.classList.contains('hidden')) {
-          refreshChannels();
+          refreshChannels().catch(err =>
+            console.error("[Discord Reader] NavController refresh error:", err)
+          );
         }
       }, 400);
     });

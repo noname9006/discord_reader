@@ -64,10 +64,18 @@ discord_reader/
 | **1 — Skeleton** | ✅ Complete | Manifest, content script, hotkey, overlay toggle, all module stubs |
 | **2 — Wire Scraper + Scroller to Storage** | ✅ Complete | `scrape_controller.js` orchestrates scrape flow; scrape button wired with live progress and stop support; `DB.getLastMessageId()` added |
 | **3 — Populate Guilds & Channels Panes** | ✅ Complete | `nav_reader.js` + `nav_controller.js`; Guilds and Channels panes populated from live Discord DOM on overlay open; click-to-navigate; MutationObserver auto-refresh |
-| **4 — Scroller** | 🔜 Upcoming | Auto-scroll, stop conditions (date / last saved ID) |
+| **4 — Click-to-Navigate + Scrape + Count Badges** | ✅ Complete | Clicking a channel navigates Discord and starts scraping; saved message counts shown as badges in the Channels pane; `DB.getMessageCountByChannel()` added; button text updated to "Scrape current channel" |
 | **5 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
 | **6 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
 | **7 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 4 added
+- `storage/db.js`: `DB.getMessageCountByChannel(channelId)` — returns saved message count for a channel using the channelId index
+- `ui/panel.js`: `renderChannels()` shows count badges `(N)` next to channel names; scrape button text changed to "Scrape current channel"
+- `ui/panel.css`: Styles for `.dr-msg-count` (muted, 11px) and `li.active .dr-msg-count` (lighter on active item)
+- `content/nav_controller.js`: `refreshChannels()` is now async — fetches counts from DB and adds them to channel data; channel click handler navigates Discord and starts a scrape; both guild and channel list handlers use `_navDelegateHandler` remove-then-add pattern to avoid duplicate listeners; MutationObserver debounce forwards async errors to console
+- `content/overlay.js`: Scrape button text updated to "Scrape current channel"
+- `content/scrape_controller.js`: `onComplete` calls `NavController.refreshChannels()` to refresh count badges after each scrape
 
 ### Phase 3 added
 - `content/nav_reader.js` — reads guilds and channels from live Discord DOM
