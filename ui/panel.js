@@ -71,6 +71,13 @@ function renderChannels(channels) {
     item.textContent = (channel.name ? "# " + channel.name : channel.id);
     item.dataset.channelId = channel.id;
 
+    if (channel.count !== undefined) {
+      const badge = document.createElement("span");
+      badge.className = "dr-msg-count";
+      badge.textContent = "(" + channel.count + ")";
+      item.appendChild(badge);
+    }
+
     item.addEventListener("click", () => {
       // Highlight active item
       list.querySelectorAll("li").forEach((el) => el.classList.remove("active"));
@@ -110,7 +117,7 @@ function setScrapeButtonState(scraping) {
     btn.textContent = "⏹ Stop scraping";
   } else {
     btn.disabled = false;
-    btn.textContent = "Scrape this channel";
+    btn.textContent = "Scrape current channel";
   }
 }
 

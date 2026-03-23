@@ -36,7 +36,9 @@ function toggleOverlay() {
   // Refresh nav panes whenever the panel is shown
   if (!_panelRoot.classList.contains("hidden")) {
     NavController.refreshGuilds();
-    NavController.refreshChannels();
+    NavController.refreshChannels().catch(err =>
+      console.error("[Discord Reader] NavController refresh error:", err)
+    );
   }
 }
 
@@ -139,7 +141,7 @@ function _buildPanel() {
   const scrapeBtn = document.createElement("button");
   scrapeBtn.className = "dr-scrape-btn";
   scrapeBtn.id = "dr-scrape-btn";
-  scrapeBtn.textContent = "Scrape this channel";
+  scrapeBtn.textContent = "Scrape current channel";
   scrapeBtn.addEventListener("click", async () => {
     if (_scraping) {
       _scraping = false;

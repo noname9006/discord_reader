@@ -195,6 +195,18 @@ const DB = (() => {
   }
 
   /**
+   * Return the count of saved messages for a given channel.
+   *
+   * @param {string} channelId
+   * @returns {Promise<number>}
+   */
+  async function getMessageCountByChannel(channelId) {
+    const index = _roStore("messages").index("channelId");
+    const count = await _promisify(index.count(IDBKeyRange.only(channelId)));
+    return count || 0;
+  }
+
+  /**
    * Return the Discord message ID (snowflake string) of the most recently
    * saved message for a channel. Snowflake IDs sort lexicographically —
    * the highest string value is the newest message.
@@ -235,6 +247,7 @@ const DB = (() => {
     getLastMessageTimestamp,
     getMessagesByChannel,
     getLastMessageId,
+    getMessageCountByChannel,
   };
 })();
 
