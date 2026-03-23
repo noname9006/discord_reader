@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Discord Reader",
+  "version": "0.1.0",
+  "description": "Overlay for Discord that scrapes and saves messages",
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://discord.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background/service_worker.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://discord.com/*"],
+      "js": [
+        "content/discord_selectors.js",
+        "content/scraper.js",
+        "content/scroller.js",
+        "ui/panel.js",
+        "content/overlay.js",
+        "content/index.js"
+      ],
+      "css": ["ui/panel.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "commands": {
+    "toggle-overlay": {
+      "suggested_key": {
+        "default": "Alt+D"
+      },
+      "description": "Toggle Discord Reader overlay"
+    }
+  },
+
+  "icons": {
+    "128": "icons/icon128.png"
+  }
+}

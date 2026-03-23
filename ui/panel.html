@@ -1,0 +1,85 @@
+<!--
+  ui/panel.html
+
+  Reference template for the Discord Reader overlay panel.
+
+  NOTE: This file is NOT loaded directly by the extension.
+  The actual DOM injection is performed programmatically in content/overlay.js
+  using createElement / appendChild (for security — no innerHTML).
+
+  This file serves as:
+    1. A human-readable reference for the panel structure
+    2. A prototyping/preview document (open in a browser to inspect styling)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discord Reader — Panel Preview</title>
+  <link rel="stylesheet" href="panel.css" />
+  <style>
+    /* Preview-only styles: simulate the Discord background */
+    body {
+      margin: 0;
+      background: #36393f;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    #discord-reader-root
+    This div mirrors exactly what overlay.js builds programmatically.
+    Remove class="hidden" to preview it.
+  -->
+  <div id="discord-reader-root" class="hidden">
+
+    <!-- Header row -->
+    <div class="dr-header">
+      <span class="dr-title">Discord Reader</span>
+      <button class="dr-close-btn" aria-label="Close Discord Reader">✕</button>
+    </div>
+
+    <!-- Three-column body -->
+    <div class="dr-body">
+
+      <!-- Column 1: Guilds -->
+      <div class="dr-guilds-pane" id="dr-guilds-pane">
+        <div class="dr-pane-label">Guilds</div>
+        <ul class="dr-list" id="dr-guilds-list">
+          <!-- Populated by ui/panel.js renderGuilds() -->
+          <li class="active">My Server</li>
+          <li>Another Guild</li>
+        </ul>
+      </div>
+
+      <!-- Column 2: Channels -->
+      <div class="dr-channels-pane" id="dr-channels-pane">
+        <div class="dr-pane-label">Channels</div>
+        <ul class="dr-list" id="dr-channels-list">
+          <!-- Populated by ui/panel.js renderChannels() -->
+          <li class="active"># general</li>
+          <li># dev</li>
+          <li># random</li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Messages / Status -->
+      <div class="dr-messages-pane" id="dr-messages-pane">
+        <div class="dr-pane-label">Messages / Status</div>
+        <div class="dr-status" id="dr-status">
+          Idle — press Scrape to begin.
+        </div>
+        <!-- Wired to scraper in Phase 4 -->
+        <button class="dr-scrape-btn" id="dr-scrape-btn">
+          Scrape this channel
+        </button>
+      </div>
+
+    </div><!-- /.dr-body -->
+  </div><!-- /#discord-reader-root -->
+
+</body>
+</html>

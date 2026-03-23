@@ -1,0 +1,190 @@
+/**
+ * ui/panel.css
+ *
+ * Styles for the Discord Reader overlay panel (#discord-reader-root).
+ * Injected into Discord tabs as a content script CSS file (see manifest.json).
+ *
+ * The panel sits fixed on the right side of the screen over Discord's UI.
+ * A `.hidden` class completely hides it; toggling that class shows/hides.
+ */
+
+/* ── Root panel container ──────────────────────────────────────────────────── */
+#discord-reader-root {
+  /* Positioning */
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100vh;
+  z-index: 999999;
+
+  /* Appearance */
+  background-color: rgba(30, 31, 34, 0.95);
+  color: #dcddde;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.6);
+
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+
+  /* Ensure the panel doesn't inherit Discord's CSS resets */
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+/* Hidden state — toggled by overlay.js */
+#discord-reader-root.hidden {
+  display: none;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background-color: rgba(20, 21, 23, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+/* Close button */
+#discord-reader-root .dr-close-btn {
+  background: none;
+  border: none;
+  color: #b9bbbe;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+#discord-reader-root .dr-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* ── Three-column body ───────────────────────────────────────────────────────── */
+#discord-reader-root .dr-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Shared pane base styles */
+#discord-reader-root .dr-guilds-pane,
+#discord-reader-root .dr-channels-pane,
+#discord-reader-root .dr-messages-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Column widths */
+#discord-reader-root .dr-guilds-pane   { flex: 0 0 80px; }
+#discord-reader-root .dr-channels-pane { flex: 0 0 110px; }
+#discord-reader-root .dr-messages-pane { flex: 1; border-right: none; }
+
+/* Pane label / column header */
+#discord-reader-root .dr-pane-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #96989d;
+  padding: 8px 8px 4px;
+  flex-shrink: 0;
+}
+
+/* ── Scrollable lists ────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#discord-reader-root .dr-list li {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 4px;
+  font-size: 13px;
+  color: #b9bbbe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+#discord-reader-root .dr-list li:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+#discord-reader-root .dr-list li.active {
+  background-color: rgba(88, 101, 242, 0.35);
+  color: #ffffff;
+}
+
+/* ── Messages / Status pane ──────────────────────────────────────────────────── */
+#discord-reader-root .dr-status {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #96989d;
+  flex-shrink: 0;
+}
+
+/* ── Scrape button ───────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-scrape-btn {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 8px;
+  padding: 8px 0;
+  background-color: #5865f2;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-scrape-btn:hover {
+  background-color: #4752c4;
+}
+
+#discord-reader-root .dr-scrape-btn:active {
+  background-color: #3c45a5;
+}
+
+/* ── Scrollbar styling (Webkit) ──────────────────────────────────────────────── */
+#discord-reader-root ::-webkit-scrollbar {
+  width: 4px;
+}
+
+#discord-reader-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#discord-reader-root ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
