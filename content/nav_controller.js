@@ -7,7 +7,8 @@
  */
 
 /* global SELECTORS, readGuilds, readChannels, getActiveGuildId, getActiveChannelId,
-          renderGuilds, renderChannels, renderStatus, renderMessageViewer, appendMessages, DB, ScrapeController */
+          renderGuilds, renderChannels, renderStatus, renderMessageViewer, appendMessages,
+          DB, ScrapeController, setSelectedScrapeButtonEnabled */
 
 const NavController = (() => {
   // Internal map: guild/channel ID → DOM element reference (for click navigation)
@@ -28,6 +29,11 @@ const NavController = (() => {
 
   // popstate listener reference — stored so it can be removed in stopObserving
   let _popstateHandler = null;
+
+  // Channel selection state
+  let _selectedChannelIds = new Set();
+  let _channelDataMap = new Map(); // id → { id, name, guildId }
+  let _lastRenderedGuildId = null;
 
   // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -80,8 +86,18 @@ const NavController = (() => {
     const channels = readChannels(targetGuildId);
     const activeChannelId = getActiveChannelId();
 
+    // Reset selection when guild changes
+    if (targetGuildId !== _lastRenderedGuildId) {
+      _selectedChannelIds.clear();
+      _lastRenderedGuildId = targetGuildId;
+      setSelectedScrapeButtonEnabled(false);
+    }
+
     // Store element references
     _channelElements = new Map(channels.map(c => [c.id, c.element]));
+
+    // Populate channel data map for getSelectedChannels / getAllChannels
+    _channelDataMap = new Map(channels.map(c => [c.id, { id: c.id, name: c.name, guildId: c.guildId }]));
 
     // Fetch saved message counts for each channel
     await DB.init();
@@ -93,6 +109,7 @@ const NavController = (() => {
       guildId: c.guildId,
       name: c.name,
       count: counts[i],
+      selected: _selectedChannelIds.has(c.id),
     }));
 
     renderChannels(channelData);
@@ -114,7 +131,19 @@ const NavController = (() => {
       if (!li) return;
       const channelId = li.dataset.channelId;
 
-      // Always load and display saved messages for the clicked channel
+      // Checkbox click — toggle selection only, do NOT navigate
+      if (e.target.classList.contains('dr-ch-checkbox')) {
+        if (_selectedChannelIds.has(channelId)) {
+          _selectedChannelIds.delete(channelId);
+        } else {
+          _selectedChannelIds.add(channelId);
+        }
+        e.target.checked = _selectedChannelIds.has(channelId);
+        setSelectedScrapeButtonEnabled(_selectedChannelIds.size > 0);
+        return;
+      }
+
+      // Label / row click — load messages and navigate
       _loadAndShowMessages(channelId, 0);
 
       // Navigate only if it's a different channel
@@ -137,6 +166,25 @@ const NavController = (() => {
         console.error('[Discord Reader] _loadAndShowMessages error:', err);
       }
     }
+  }
+
+  /**
+   * Return only the channels currently checked in the selection set.
+   * @returns {Array<{id: string, name: string, guildId: string}>}
+   */
+  function getSelectedChannels() {
+    return [..._selectedChannelIds].map(id => {
+      const ch = _channelDataMap.get(id);
+      return ch ? { id: ch.id, name: ch.name, guildId: ch.guildId } : null;
+    }).filter(Boolean);
+  }
+
+  /**
+   * Return all channels currently visible in the Channels pane.
+   * @returns {Array<{id: string, name: string, guildId: string}>}
+   */
+  function getAllChannels() {
+    return [..._channelDataMap.values()].map(ch => ({ id: ch.id, name: ch.name, guildId: ch.guildId }));
   }
 
   /**
@@ -334,6 +382,9 @@ const NavController = (() => {
     refreshChannels,
     startObserving,
     stopObserving,
+    navigateToChannel: _navigateToChannel,
+    getSelectedChannels,
+    getAllChannels,
   };
 })();
 

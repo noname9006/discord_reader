@@ -30,6 +30,7 @@
         "ui/panel.js",
         "ui/health_panel.js",
         "content/scrape_controller.js",
+        "content/queue_controller.js",
         "content/nav_reader.js",
         "content/nav_controller.js",
         "content/overlay.js",

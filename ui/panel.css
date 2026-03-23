@@ -451,3 +451,68 @@
   border-color: rgba(255, 255, 255, 0.35);
   color: #dcddde;
 }
+
+/* ── Channel checkbox ─────────────────────────────────────────────────────── */
+#discord-reader-root .dr-ch-checkbox {
+  width: 12px;
+  height: 12px;
+  margin: 0 5px 0 0;
+  flex-shrink: 0;
+  accent-color: #5865f2;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* ── Channel label (name + badge) ────────────────────────────────────────── */
+#discord-reader-root .dr-ch-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Make the channel list items flex rows to accommodate checkbox + label */
+#discord-reader-root .dr-channels-pane .dr-list li {
+  display: flex;
+  align-items: center;
+  padding: 5px 6px;
+}
+
+/* ── Queue action row ─────────────────────────────────────────────────────── */
+#discord-reader-root .dr-queue-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 0 8px 8px;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-queue-btn {
+  flex: 1;
+  padding: 6px 0;
+  background-color: rgba(87, 242, 135, 0.12);
+  color: #b9bbbe;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(87, 242, 135, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+#discord-reader-root .dr-queue-btn:hover {
+  background-color: rgba(87, 242, 135, 0.25);
+  color: #ffffff;
+}
+
+#discord-reader-root .dr-queue-btn:active {
+  background-color: rgba(87, 242, 135, 0.4);
+}
+
+#discord-reader-root .dr-queue-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

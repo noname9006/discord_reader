@@ -10,6 +10,8 @@
  * Exports: renderGuilds(guilds), renderChannels(channels), renderStatus(text)
  */
 
+/* global QueueController */
+
 /**
  * Render a list of guild objects into the guilds pane.
  *
@@ -49,7 +51,7 @@ function renderGuilds(guilds) {
 /**
  * Render a list of channel objects into the channels pane.
  *
- * @param {Array<{id: string, guildId: string, name: string}>} channels
+ * @param {Array<{id: string, guildId: string, name: string, count?: number, selected?: boolean}>} channels
  */
 function renderChannels(channels) {
   const list = document.getElementById("dr-channels-list");
@@ -68,21 +70,35 @@ function renderChannels(channels) {
 
   for (const channel of channels) {
     const item = document.createElement("li");
-    item.textContent = (channel.name ? "# " + channel.name : channel.id);
     item.dataset.channelId = channel.id;
+
+    // Checkbox for multi-channel selection
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "dr-ch-checkbox";
+    checkbox.tabIndex = -1;
+    checkbox.checked = channel.selected === true;
+    item.appendChild(checkbox);
+
+    // Label span wrapping name + badge
+    const label = document.createElement("span");
+    label.className = "dr-ch-label";
+    label.textContent = (channel.name ? "# " + channel.name : channel.id);
 
     if (channel.count !== undefined) {
       const badge = document.createElement("span");
       badge.className = "dr-msg-count";
       badge.textContent = "(" + channel.count + ")";
-      item.appendChild(badge);
+      label.appendChild(badge);
     }
 
+    item.appendChild(label);
+
     item.addEventListener("click", () => {
-      // Highlight active item
+      // Highlight active item (only for non-checkbox clicks, but harmless here)
       list.querySelectorAll("li").forEach((el) => el.classList.remove("active"));
       item.classList.add("active");
-      // Navigation handled by NavController (nav_controller.js)
+      // Navigation / selection handled by NavController (nav_controller.js)
     });
 
     list.appendChild(item);
@@ -230,7 +246,38 @@ function _updateLoadMoreBtn(list, hasMore) {
   }
 }
 
+/**
+ * Update queue button appearance based on running state.
+ * @param {boolean} running
+ * @param {'selected'|'all'|null} mode  — which button triggered the queue
+ */
+function setQueueButtonState(running, mode) {
+  const selectedBtn = document.getElementById('dr-scrape-selected-btn');
+  const allBtn = document.getElementById('dr-scrape-all-btn');
+  if (!selectedBtn || !allBtn) return;
+  if (running) {
+    selectedBtn.disabled = mode !== 'selected';
+    allBtn.disabled = mode !== 'all';
+    if (mode === 'selected') selectedBtn.textContent = '⏹ Stop queue';
+    if (mode === 'all')      allBtn.textContent      = '⏹ Stop queue';
+  } else {
+    selectedBtn.disabled = false;
+    allBtn.disabled = false;
+    selectedBtn.textContent = '⚡ Scrape selected';
+    allBtn.textContent      = '⚡ Scrape all channels';
+  }
+}
+
+/**
+ * Enable or disable the "Scrape selected" button (only when queue is not running).
+ * @param {boolean} enabled
+ */
+function setSelectedScrapeButtonEnabled(enabled) {
+  const btn = document.getElementById('dr-scrape-selected-btn');
+  if (btn && !QueueController.isRunning()) btn.disabled = !enabled;
+}
+
 // Expose to other content scripts in the same scope
 if (typeof module !== "undefined") {
-  module.exports = { renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages };
+  module.exports = { renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages, setQueueButtonState, setSelectedScrapeButtonEnabled };
 }
