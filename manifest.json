@@ -22,11 +22,13 @@
       "matches": ["https://discord.com/*"],
       "js": [
         "content/discord_selectors.js",
+        "content/health_check.js",
         "content/scraper.js",
         "content/scroller.js",
         "storage/db.js",
         "content/exporter.js",
         "ui/panel.js",
+        "ui/health_panel.js",
         "content/scrape_controller.js",
         "content/nav_reader.js",
         "content/nav_controller.js",
