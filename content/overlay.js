@@ -11,7 +11,7 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController, exportCurrentChannel */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController, exportCurrentChannel, runAndRenderHealthCheck */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
@@ -54,10 +54,19 @@ function toggleOverlay() {
  *     .dr-header
  *       span  "Discord Reader"
  *       button  "✕"  (close)
+ *     .dr-tabs
+ *       button.dr-tab.active  "Scraper"
+ *       button.dr-tab         "Health"
  *     .dr-body
  *       .dr-guilds-pane
  *       .dr-channels-pane
  *       .dr-messages-pane
+ *     #dr-health-pane  (hidden by default)
+ *       .dr-pane-label  "Selector Health"
+ *       .dr-health-run-row
+ *         button#dr-health-run-btn  "Run Check"
+ *       div#dr-health-summary
+ *       ul#dr-health-list
  *
  * @returns {HTMLDivElement}
  */
@@ -86,6 +95,21 @@ function _buildPanel() {
 
   header.appendChild(title);
   header.appendChild(closeBtn);
+
+  // ── Tab bar ───────────────────────────────────────────────────────────────
+  const tabs = document.createElement("div");
+  tabs.className = "dr-tabs";
+
+  const scraperTab = document.createElement("button");
+  scraperTab.className = "dr-tab active";
+  scraperTab.textContent = "Scraper";
+
+  const healthTab = document.createElement("button");
+  healthTab.className = "dr-tab";
+  healthTab.textContent = "Health";
+
+  tabs.appendChild(scraperTab);
+  tabs.appendChild(healthTab);
 
   // ── Body (three-column layout) ────────────────────────────────────────────
   const body = document.createElement("div");
@@ -174,6 +198,49 @@ function _buildPanel() {
   exportRow.appendChild(exportCsvBtn);
   messagesPane.appendChild(exportRow);
 
+  // ── Health pane (hidden by default) ───────────────────────────────────────
+  const healthPane = document.createElement("div");
+  healthPane.id = "dr-health-pane";
+  healthPane.className = "hidden";
+
+  const healthLabel = document.createElement("div");
+  healthLabel.className = "dr-pane-label";
+  healthLabel.textContent = "Selector Health";
+  healthPane.appendChild(healthLabel);
+
+  const healthRunRow = document.createElement("div");
+  healthRunRow.className = "dr-health-run-row";
+
+  const healthRunBtn = document.createElement("button");
+  healthRunBtn.id = "dr-health-run-btn";
+  healthRunBtn.textContent = "Run Check";
+  healthRunBtn.addEventListener("click", () => runAndRenderHealthCheck());
+  healthRunRow.appendChild(healthRunBtn);
+  healthPane.appendChild(healthRunRow);
+
+  const healthSummary = document.createElement("div");
+  healthSummary.id = "dr-health-summary";
+  healthPane.appendChild(healthSummary);
+
+  const healthList = document.createElement("ul");
+  healthList.id = "dr-health-list";
+  healthPane.appendChild(healthList);
+
+  // ── Tab switching logic ───────────────────────────────────────────────────
+  scraperTab.addEventListener("click", () => {
+    scraperTab.classList.add("active");
+    healthTab.classList.remove("active");
+    body.classList.remove("hidden");
+    healthPane.classList.add("hidden");
+  });
+
+  healthTab.addEventListener("click", () => {
+    healthTab.classList.add("active");
+    scraperTab.classList.remove("active");
+    healthPane.classList.remove("hidden");
+    body.classList.add("hidden");
+  });
+
   // Assemble body
   body.appendChild(guildsPane);
   body.appendChild(channelsPane);
@@ -181,7 +248,9 @@ function _buildPanel() {
 
   // Assemble root
   root.appendChild(header);
+  root.appendChild(tabs);
   root.appendChild(body);
+  root.appendChild(healthPane);
 
   return root;
 }

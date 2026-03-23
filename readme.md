@@ -67,9 +67,16 @@ discord_reader/
 | **3 — Populate Guilds & Channels Panes** | ✅ Complete | `nav_reader.js` + `nav_controller.js`; Guilds and Channels panes populated from live Discord DOM on overlay open; click-to-navigate; MutationObserver auto-refresh |
 | **4 — Click-to-Navigate + Scrape + Count Badges** | ✅ Complete | Clicking a channel navigates Discord and starts scraping; saved message counts shown as badges in the Channels pane; `DB.getMessageCountByChannel()` added; button text updated to "Scrape current channel" |
 | **5 — Export Saved Messages to File** | ✅ Complete | Export JSON/CSV buttons in the Messages pane; `content/exporter.js` fetches messages from IndexedDB and triggers a browser download |
-| **6 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
+| **6 — Selector Health Check** | ✅ Complete | Selector Health Check — live DOM diagnostics, tab-switched health pane, green/yellow/red per selector |
 | **7 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
 | **8 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 6 added
+- `content/health_check.js` — `HealthCheck.run()` IIFE; iterates all `SELECTORS` keys, runs `querySelectorAll` on each, returns array sorted by severity (fail → warn → ok); fallback keys marked `warn` when matched
+- `ui/health_panel.js` — `runAndRenderHealthCheck()` global; renders results into `#dr-health-pane` with colored dots, key names, match counts, and a summary line
+- `content/overlay.js`: Tab bar (`.dr-tabs`) added above `.dr-body`; `#dr-health-pane` added as sibling; tab click handlers toggle `hidden` class; "Run Check" button wired to `runAndRenderHealthCheck()`
+- `ui/panel.css`: Tab bar styles (`.dr-tabs`, `.dr-tab`, `.dr-tab.active`) and health pane styles (`.dr-health-row--ok/warn/fail`, `.dr-health-dot`, `.dr-health-key`, `.dr-health-count`, `.dr-health-summary`)
+- `manifest.json`: `content/health_check.js` added after `content/discord_selectors.js`; `ui/health_panel.js` added after `ui/panel.js`
 
 ### Phase 5 added
 - `content/exporter.js` — `exportCurrentChannel(format)` fetches messages from IndexedDB for the active channel and triggers a browser download as JSON or CSV; `_toCsv()` builds RFC-compliant CSV with quoted/escaped values; `_triggerDownload()` uses Blob URL and a temporary anchor element

@@ -230,3 +230,124 @@
 #discord-reader-root .dr-export-btn:active {
   background-color: rgba(88, 101, 242, 0.5);
 }
+
+/* ── Tab bar ─────────────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #96989d;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 0;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+#discord-reader-root .dr-tab:hover {
+  color: #dcddde;
+}
+
+#discord-reader-root .dr-tab.active {
+  color: #ffffff;
+  border-bottom-color: #5865f2;
+}
+
+/* ── Health pane ─────────────────────────────────────────────────────────────── */
+#discord-reader-root #dr-health-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+#discord-reader-root #dr-health-pane.hidden {
+  display: none;
+}
+
+#discord-reader-root .dr-health-run-row {
+  padding: 6px 8px;
+  flex-shrink: 0;
+}
+
+#discord-reader-root #dr-health-run-btn {
+  background-color: #4f545c;
+  color: #dcddde;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+#discord-reader-root #dr-health-run-btn:hover {
+  background-color: #686d73;
+}
+
+#discord-reader-root .dr-health-summary {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-health-summary.dr-health-ok   { color: #57f287; }
+#discord-reader-root .dr-health-summary.dr-health-warn { color: #fee75c; }
+#discord-reader-root .dr-health-summary.dr-health-fail { color: #ed4245; }
+
+#discord-reader-root #dr-health-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#discord-reader-root .dr-health-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 3px;
+  margin: 1px 4px;
+}
+
+#discord-reader-root .dr-health-dot {
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-health-key {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #dcddde;
+}
+
+#discord-reader-root .dr-health-count {
+  font-size: 11px;
+  color: #72767d;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-health-row--ok   .dr-health-dot { color: #57f287; }
+#discord-reader-root .dr-health-row--warn .dr-health-dot { color: #fee75c; }
+#discord-reader-root .dr-health-row--fail .dr-health-dot { color: #ed4245; }
+
+#discord-reader-root .dr-health-row--fail .dr-health-key { color: #ed4245; font-weight: 600; }
+#discord-reader-root .dr-health-row--warn .dr-health-key { color: #fee75c; }
