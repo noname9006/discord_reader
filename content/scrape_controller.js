@@ -55,14 +55,17 @@ const ScrapeController = (() => {
     // ── 4. Determine cutoff timestamp ─────────────────────────────────────────
     const lastTimestamp = await DB.getLastMessageTimestamp(channelId);
     let cutoff;
+    let isIncremental;
     if (lastTimestamp) {
       // Incremental run: stop when we reach a message we've already saved
       cutoff = lastTimestamp;
+      isIncremental = true;
     } else {
       // First run: go back defaultDays days
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - defaultDays);
       cutoff = cutoffDate.toISOString();
+      isIncremental = false;
     }
 
     // ── 5. Tracking state ─────────────────────────────────────────────────────
@@ -96,7 +99,7 @@ const ScrapeController = (() => {
             try {
               await DB.saveMessages(newMessages);
               totalSaved += newMessages.length;
-              renderStatus(`Scraping… ${totalSaved} messages saved`);
+              renderStatus(isIncremental ? `Catching up… ${totalSaved} new messages` : `Scraping… ${totalSaved} messages saved`);
               for (const m of newMessages) {
                 seenIds.add(m.id);
               }
@@ -109,7 +112,15 @@ const ScrapeController = (() => {
 
         onComplete: () => {
           if (_isStopped) return;
-          renderStatus(`Done — ${totalSaved} messages saved for #${channelName}`);
+          if (isIncremental) {
+            renderStatus(
+              totalSaved === 0
+                ? `#${channelName} is up to date.`
+                : `Caught up — ${totalSaved} new messages saved for #${channelName}`
+            );
+          } else {
+            renderStatus(`Done — ${totalSaved} messages saved for #${channelName}`);
+          }
           _teardown();
           NavController.refreshChannels().catch(err =>
             console.error("[Discord Reader] NavController refresh error:", err)
@@ -129,7 +140,11 @@ const ScrapeController = (() => {
 
       // ── 8-9. Update UI and start ────────────────────────────────────────────
       setScrapeButtonState(true);
-      renderStatus(`Starting scrape for #${channelName}…`);
+      renderStatus(
+        isIncremental
+          ? `Catching up #${channelName}…`
+          : `Scraping #${channelName} (last ${defaultDays} days)…`
+      );
       _scroller.start();
     });
   }

@@ -6,7 +6,7 @@
  * moving on.  Supports mid-queue stop via QueueController.stop().
  */
 
-/* global ScrapeController, NavController, renderStatus, setQueueButtonState, setSelectedScrapeButtonEnabled */
+/* global ScrapeController, NavController, renderStatus, setQueueButtonState, setSelectedScrapeButtonEnabled, DB */
 
 const QueueController = (() => {
   let _running = false;
@@ -29,6 +29,7 @@ const QueueController = (() => {
     const total = channels.length;
 
     setQueueButtonState(true, mode || 'all');
+    await DB.init();
 
     for (let i = 0; i < total; i++) {
       if (_stopRequested) break;
@@ -42,11 +43,24 @@ const QueueController = (() => {
 
         if (_stopRequested) break;
 
+        const lastTs = await DB.getLastMessageTimestamp(ch.id);
+        const isIncremental = !!lastTs;
+
+        renderStatus(
+          isIncremental
+            ? `Queue ${i + 1}/${total}: catching up #${channelName}…`
+            : `Queue ${i + 1}/${total}: first scrape of #${channelName}…`
+        );
+
         await ScrapeController.start({ defaultDays: 7 });
 
         await NavController.refreshChannels();
 
-        renderStatus(`Queue: scraped ${i + 1}/${total} — #${channelName}`);
+        renderStatus(
+          isIncremental
+            ? `Queue: caught up ${i + 1}/${total} — #${channelName}`
+            : `Queue: scraped ${i + 1}/${total} — #${channelName}`
+        );
       } catch (err) {
         console.error(`[Discord Reader] Queue error on #${channelName}:`, err);
         renderStatus(`⚠ Queue: error on #${channelName} — continuing`);
