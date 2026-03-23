@@ -44,6 +44,7 @@ discord_reader/
 │   ├── scrape_controller.js    # Orchestrates scrape flow (scraper + scroller + DB + UI)
 │   ├── nav_reader.js           # Reads guilds and channels from live Discord DOM
 │   ├── nav_controller.js       # Populates panel panes, click-to-navigate, MutationObserver
+│   ├── exporter.js             # Exports saved messages to JSON or CSV download
 │   └── discord_selectors.js    # All Discord CSS selectors — single place to fix
 ├── storage/
 │   └── db.js                   # IndexedDB wrapper (guilds / channels / messages)
@@ -65,9 +66,16 @@ discord_reader/
 | **2 — Wire Scraper + Scroller to Storage** | ✅ Complete | `scrape_controller.js` orchestrates scrape flow; scrape button wired with live progress and stop support; `DB.getLastMessageId()` added |
 | **3 — Populate Guilds & Channels Panes** | ✅ Complete | `nav_reader.js` + `nav_controller.js`; Guilds and Channels panes populated from live Discord DOM on overlay open; click-to-navigate; MutationObserver auto-refresh |
 | **4 — Click-to-Navigate + Scrape + Count Badges** | ✅ Complete | Clicking a channel navigates Discord and starts scraping; saved message counts shown as badges in the Channels pane; `DB.getMessageCountByChannel()` added; button text updated to "Scrape current channel" |
-| **5 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
-| **6 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
-| **7 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+| **5 — Export Saved Messages to File** | ✅ Complete | Export JSON/CSV buttons in the Messages pane; `content/exporter.js` fetches messages from IndexedDB and triggers a browser download |
+| **6 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
+| **7 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
+| **8 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 5 added
+- `content/exporter.js` — `exportCurrentChannel(format)` fetches messages from IndexedDB for the active channel and triggers a browser download as JSON or CSV; `_toCsv()` builds RFC-compliant CSV with quoted/escaped values; `_triggerDownload()` uses Blob URL and a temporary anchor element
+- `content/overlay.js`: Two export buttons (`⬇ JSON`, `⬇ CSV`) added below the scrape button, wrapped in a `div.dr-export-row`; wired to `exportCurrentChannel('json')` / `exportCurrentChannel('csv')`
+- `ui/panel.css`: Styles for `.dr-export-row` (flex row, 6px gap) and `.dr-export-btn` (translucent Discord-blue, hover/active states)
+- `manifest.json`: `content/exporter.js` added after `storage/db.js` and before `ui/panel.js`
 
 ### Phase 4 added
 - `storage/db.js`: `DB.getMessageCountByChannel(channelId)` — returns saved message count for a channel using the channelId index
