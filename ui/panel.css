@@ -351,3 +351,103 @@
 
 #discord-reader-root .dr-health-row--fail .dr-health-key { color: #ed4245; font-weight: 600; }
 #discord-reader-root .dr-health-row--warn .dr-health-key { color: #fee75c; }
+
+/* ── Message viewer tab bar ───────────────────────────────────────────────── */
+#discord-reader-root .dr-msg-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-msg-tab {
+  flex: 1;
+  padding: 5px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #96989d;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+#discord-reader-root .dr-msg-tab:hover {
+  color: #dcddde;
+}
+
+#discord-reader-root .dr-msg-tab.active {
+  color: #ffffff;
+  border-bottom-color: #5865f2;
+}
+
+/* ── Message viewer sub-views ─────────────────────────────────────────────── */
+#discord-reader-root .dr-msg-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+#discord-reader-root .dr-msg-view.hidden {
+  display: none;
+}
+
+/* ── Message list ─────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-msg-list li {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 5px 8px;
+  cursor: default;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+#discord-reader-root .dr-msg-list li:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: inherit;
+}
+
+#discord-reader-root .dr-msg-meta {
+  font-size: 10px;
+  color: #72767d;
+  margin-bottom: 2px;
+}
+
+#discord-reader-root .dr-msg-body {
+  font-size: 12px;
+  color: #dcddde;
+  word-break: break-word;
+}
+
+/* ── Load more button ─────────────────────────────────────────────────────── */
+#discord-reader-root .dr-load-more-item {
+  display: flex;
+  justify-content: center;
+  padding: 6px 8px;
+  cursor: default;
+}
+
+#discord-reader-root .dr-load-more-item:hover {
+  background: none;
+}
+
+#discord-reader-root .dr-load-more-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #96989d;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+#discord-reader-root .dr-load-more-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #dcddde;
+}

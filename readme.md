@@ -68,8 +68,15 @@ discord_reader/
 | **4 — Click-to-Navigate + Scrape + Count Badges** | ✅ Complete | Clicking a channel navigates Discord and starts scraping; saved message counts shown as badges in the Channels pane; `DB.getMessageCountByChannel()` added; button text updated to "Scrape current channel" |
 | **5 — Export Saved Messages to File** | ✅ Complete | Export JSON/CSV buttons in the Messages pane; `content/exporter.js` fetches messages from IndexedDB and triggers a browser download |
 | **6 — Selector Health Check** | ✅ Complete | Selector Health Check — live DOM diagnostics, tab-switched health pane, green/yellow/red per selector |
-| **7 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
+| **7 — Stored Data Viewer** | ✅ Complete | Message list in overlay panel; tab switcher (Messages \| Controls); paginated load (50/page); auto-refresh on scrape complete |
 | **8 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 7 added
+- `storage/db.js`: `DB.getMessagesPage(channelId, offset, limit)` — returns a page of messages sorted newest-first for paginated display
+- `ui/panel.js`: `renderMessageViewer(messages, hasMore)` — renders first page of saved messages into `#dr-msg-list`; shows empty state if none; `appendMessages(messages, hasMore)` — appends next page of messages; `_buildMessageRow` builds each `<li>` with `.dr-msg-meta` (timestamp + author) and `.dr-msg-body` (content, truncated at 120 chars with `title` for full text); `_updateLoadMoreBtn` adds/removes "Load more" button
+- `content/overlay.js`: Messages pane restructured with inner tab bar (`Messages | Controls`); messages view (`#dr-msg-view-messages`) with `#dr-msg-list` visible by default; controls view (`#dr-msg-view-controls`) contains scrape button, status, and export row; tab click handlers toggle `.hidden` class on sub-views
+- `content/nav_controller.js`: `_loadAndShowMessages(channelId, offset)` loads a page from DB and calls `renderMessageViewer`/`appendMessages`; channel click handler now calls `_loadAndShowMessages` on every click (no auto-scrape); `refreshChannels()` calls `_loadAndShowMessages` for the active channel after rendering, so messages auto-refresh when panel opens or after a scrape completes
+- `ui/panel.css`: Styles for `.dr-msg-tabs`, `.dr-msg-tab`, `.dr-msg-view`, `.dr-msg-list`, `.dr-msg-meta`, `.dr-msg-body`, `.dr-load-more-item`, and `.dr-load-more-btn`
 
 ### Phase 6 added
 - `content/health_check.js` — `HealthCheck.run()` IIFE; iterates all `SELECTORS` keys, runs `querySelectorAll` on each, returns array sorted by severity (fail → warn → ok); fallback keys marked `warn` when matched

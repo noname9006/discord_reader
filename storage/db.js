@@ -238,6 +238,20 @@ const DB = (() => {
     });
   }
 
+  /**
+   * Return a page of messages for a channel, sorted newest-first.
+   *
+   * @param {string} channelId
+   * @param {number} offset   — number of records to skip
+   * @param {number} limit    — max records to return
+   * @returns {Promise<Array>}
+   */
+  async function getMessagesPage(channelId, offset, limit) {
+    const all = await getMessagesByChannel(channelId); // sorted ASC
+    const desc = all.slice().reverse();                // newest first
+    return desc.slice(offset, offset + limit);
+  }
+
   // Expose the public surface
   return {
     init,
@@ -248,6 +262,7 @@ const DB = (() => {
     getMessagesByChannel,
     getLastMessageId,
     getMessageCountByChannel,
+    getMessagesPage,
   };
 })();
 

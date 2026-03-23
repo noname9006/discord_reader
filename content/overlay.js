@@ -11,7 +11,7 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController, exportCurrentChannel, runAndRenderHealthCheck */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages, ScrapeController, NavController, exportCurrentChannel, runAndRenderHealthCheck */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
@@ -155,11 +155,46 @@ function _buildPanel() {
   messagesLabel.textContent = "Messages / Status";
   messagesPane.appendChild(messagesLabel);
 
+  // ── Inner tab bar (Messages | Controls) ────────────────────────────────────
+  const msgTabs = document.createElement("div");
+  msgTabs.className = "dr-msg-tabs";
+
+  const tabMessages = document.createElement("button");
+  tabMessages.className = "dr-msg-tab active";
+  tabMessages.id = "dr-tab-messages";
+  tabMessages.textContent = "Messages";
+
+  const tabControls = document.createElement("button");
+  tabControls.className = "dr-msg-tab";
+  tabControls.id = "dr-tab-controls";
+  tabControls.textContent = "Controls";
+
+  msgTabs.appendChild(tabMessages);
+  msgTabs.appendChild(tabControls);
+  messagesPane.appendChild(msgTabs);
+
+  // ── Messages view (visible by default) ─────────────────────────────────────
+  const msgViewMessages = document.createElement("div");
+  msgViewMessages.className = "dr-msg-view";
+  msgViewMessages.id = "dr-msg-view-messages";
+
+  const msgList = document.createElement("ul");
+  msgList.className = "dr-list dr-msg-list";
+  msgList.id = "dr-msg-list";
+  msgViewMessages.appendChild(msgList);
+
+  messagesPane.appendChild(msgViewMessages);
+
+  // ── Controls view (hidden by default) ──────────────────────────────────────
+  const msgViewControls = document.createElement("div");
+  msgViewControls.className = "dr-msg-view hidden";
+  msgViewControls.id = "dr-msg-view-controls";
+
   const statusArea = document.createElement("div");
   statusArea.className = "dr-status";
   statusArea.id = "dr-status";
   statusArea.textContent = "Idle — press Scrape to begin.";
-  messagesPane.appendChild(statusArea);
+  msgViewControls.appendChild(statusArea);
 
   // "Scrape this channel" button — toggles between start and stop
   const scrapeBtn = document.createElement("button");
@@ -176,7 +211,7 @@ function _buildPanel() {
       _scraping = false;
     }
   });
-  messagesPane.appendChild(scrapeBtn);
+  msgViewControls.appendChild(scrapeBtn);
 
   // Export row — JSON and CSV download buttons
   const exportRow = document.createElement("div");
@@ -196,7 +231,24 @@ function _buildPanel() {
 
   exportRow.appendChild(exportJsonBtn);
   exportRow.appendChild(exportCsvBtn);
-  messagesPane.appendChild(exportRow);
+  msgViewControls.appendChild(exportRow);
+
+  messagesPane.appendChild(msgViewControls);
+
+  // ── Tab switching logic (Messages / Controls) ───────────────────────────────
+  tabMessages.addEventListener("click", () => {
+    tabMessages.classList.add("active");
+    tabControls.classList.remove("active");
+    msgViewMessages.classList.remove("hidden");
+    msgViewControls.classList.add("hidden");
+  });
+
+  tabControls.addEventListener("click", () => {
+    tabControls.classList.add("active");
+    tabMessages.classList.remove("active");
+    msgViewControls.classList.remove("hidden");
+    msgViewMessages.classList.add("hidden");
+  });
 
   // ── Health pane (hidden by default) ───────────────────────────────────────
   const healthPane = document.createElement("div");
