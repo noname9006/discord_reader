@@ -199,3 +199,34 @@
 #discord-reader-root li.active .dr-msg-count {
   color: #b9bbbe;
 }
+
+/* ── Export buttons ───────────────────────────────────────────────────────────── */
+#discord-reader-root .dr-export-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 0 8px 8px;
+  flex-shrink: 0;
+}
+
+#discord-reader-root .dr-export-btn {
+  flex: 1;
+  padding: 6px 0;
+  background-color: rgba(88, 101, 242, 0.18);
+  color: #b9bbbe;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+#discord-reader-root .dr-export-btn:hover {
+  background-color: rgba(88, 101, 242, 0.35);
+  color: #ffffff;
+}
+
+#discord-reader-root .dr-export-btn:active {
+  background-color: rgba(88, 101, 242, 0.5);
+}

@@ -11,7 +11,7 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController, exportCurrentChannel */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
@@ -153,6 +153,26 @@ function _buildPanel() {
     }
   });
   messagesPane.appendChild(scrapeBtn);
+
+  // Export row — JSON and CSV download buttons
+  const exportRow = document.createElement("div");
+  exportRow.className = "dr-export-row";
+
+  const exportJsonBtn = document.createElement("button");
+  exportJsonBtn.id = "dr-export-json-btn";
+  exportJsonBtn.className = "dr-export-btn";
+  exportJsonBtn.textContent = "⬇ JSON";
+  exportJsonBtn.addEventListener("click", () => exportCurrentChannel("json"));
+
+  const exportCsvBtn = document.createElement("button");
+  exportCsvBtn.id = "dr-export-csv-btn";
+  exportCsvBtn.className = "dr-export-btn";
+  exportCsvBtn.textContent = "⬇ CSV";
+  exportCsvBtn.addEventListener("click", () => exportCurrentChannel("csv"));
+
+  exportRow.appendChild(exportJsonBtn);
+  exportRow.appendChild(exportCsvBtn);
+  messagesPane.appendChild(exportRow);
 
   // Assemble body
   body.appendChild(guildsPane);

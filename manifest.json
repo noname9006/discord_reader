@@ -25,6 +25,7 @@
         "content/scraper.js",
         "content/scroller.js",
         "storage/db.js",
+        "content/exporter.js",
         "ui/panel.js",
         "content/scrape_controller.js",
         "content/nav_reader.js",
