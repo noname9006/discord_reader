@@ -73,7 +73,7 @@ class ScrollController {
    * Execute one scroll step: scroll up, scrape, check stop condition, schedule
    * the next step (or finish).
    */
-  _step() {
+  async _step() {
     if (!this._running) return;
 
     try {
@@ -103,12 +103,12 @@ class ScrollController {
       );
 
       // Give the DOM a moment to render newly loaded messages before scraping
-      this._timeoutId = setTimeout(() => {
+      this._timeoutId = setTimeout(async () => {
         if (!this._running) return;
 
         try {
           const messages = scrapeVisibleMessages();
-          this._onBatch(messages);
+          await this._onBatch(messages);
 
           // Check if we've reached the stop condition
           if (this._stopCondition(messages) || container.scrollTop <= 0) {

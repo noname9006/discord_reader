@@ -194,6 +194,38 @@ const DB = (() => {
     );
   }
 
+  /**
+   * Return the Discord message ID (snowflake string) of the most recently
+   * saved message for a channel. Snowflake IDs sort lexicographically —
+   * the highest string value is the newest message.
+   *
+   * @param {string} channelId
+   * @returns {Promise<string|null>}
+   */
+  async function getLastMessageId(channelId) {
+    const index = _roStore("messages").index("channelId");
+
+    return new Promise((resolve, reject) => {
+      const request = index.getAll(IDBKeyRange.only(channelId));
+      request.onsuccess = (e) => {
+        const records = e.target.result;
+        if (!records || records.length === 0) {
+          resolve(null);
+          return;
+        }
+        // Snowflake IDs are numeric strings — lexicographic sort gives newest last
+        let maxId = null;
+        for (const record of records) {
+          if (record.id && (maxId === null || record.id > maxId)) {
+            maxId = record.id;
+          }
+        }
+        resolve(maxId);
+      };
+      request.onerror = (e) => reject(e.target.error);
+    });
+  }
+
   // Expose the public surface
   return {
     init,
@@ -202,6 +234,7 @@ const DB = (() => {
     saveMessages,
     getLastMessageTimestamp,
     getMessagesByChannel,
+    getLastMessageId,
   };
 })();
 

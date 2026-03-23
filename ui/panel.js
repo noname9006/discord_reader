@@ -100,7 +100,27 @@ function renderStatus(text) {
   status.textContent = text || "";
 }
 
+/**
+ * Update the scrape button's appearance and disabled state to reflect whether
+ * a scrape is currently running.
+ * The button stays enabled in both states so the user can click it to stop a
+ * running scrape.
+ *
+ * @param {boolean} scraping  true = scrape in progress; false = idle
+ */
+function setScrapeButtonState(scraping) {
+  const btn = document.getElementById("dr-scrape-btn");
+  if (!btn) return;
+  if (scraping) {
+    btn.disabled = false;
+    btn.textContent = "⏹ Stop scraping";
+  } else {
+    btn.disabled = false;
+    btn.textContent = "Scrape this channel";
+  }
+}
+
 // Expose to other content scripts in the same scope
 if (typeof module !== "undefined") {
-  module.exports = { renderGuilds, renderChannels, renderStatus };
+  module.exports = { renderGuilds, renderChannels, renderStatus, setScrapeButtonState };
 }
