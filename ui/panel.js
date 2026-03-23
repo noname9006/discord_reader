@@ -121,7 +121,116 @@ function setScrapeButtonState(scraping) {
   }
 }
 
+/** Maximum number of characters to show in a message preview. */
+var MSG_PREVIEW_MAX = 120;
+
+/**
+ * Render the initial page of saved messages into the messages viewer.
+ * Replaces any existing content in #dr-msg-list.
+ *
+ * @param {Array<{id, authorName, content, timestamp}>} messages  newest-first
+ * @param {boolean} hasMore  whether there are more pages to load
+ */
+function renderMessageViewer(messages, hasMore) {
+  const list = document.getElementById('dr-msg-list');
+  if (!list) return;
+
+  list.innerHTML = '';
+
+  if (!messages || messages.length === 0) {
+    const empty = document.createElement('li');
+    const emptySpan = document.createElement('span');
+    emptySpan.style.fontStyle = 'italic';
+    emptySpan.style.color = '#72767d';
+    emptySpan.textContent = 'No saved messages for this channel.';
+    empty.appendChild(emptySpan);
+    list.appendChild(empty);
+    return;
+  }
+
+  for (const msg of messages) {
+    list.appendChild(_buildMessageRow(msg));
+  }
+
+  _updateLoadMoreBtn(list, hasMore);
+}
+
+/**
+ * Append more messages to the existing list (for "Load more").
+ *
+ * @param {Array} messages
+ * @param {boolean} hasMore
+ */
+function appendMessages(messages, hasMore) {
+  const list = document.getElementById('dr-msg-list');
+  if (!list) return;
+
+  // Remove existing load-more item before appending
+  const existing = document.getElementById('dr-load-more-btn');
+  if (existing) {
+    const item = existing.closest('li');
+    if (item) item.remove();
+  }
+
+  for (const msg of messages) {
+    list.appendChild(_buildMessageRow(msg));
+  }
+
+  _updateLoadMoreBtn(list, hasMore);
+}
+
+/**
+ * Build a single <li> message row element.
+ * @param {{id, authorName, content, timestamp}} msg
+ * @returns {HTMLLIElement}
+ */
+function _buildMessageRow(msg) {
+  const li = document.createElement('li');
+
+  const meta = document.createElement('span');
+  meta.className = 'dr-msg-meta';
+  const ts = msg.timestamp ? msg.timestamp.slice(0, 16).replace('T', ' ') : '';
+  meta.textContent = ts + (ts && msg.authorName ? ' ' : '') + (msg.authorName || '');
+  li.appendChild(meta);
+
+  const body = document.createElement('span');
+  body.className = 'dr-msg-body';
+  const fullText = msg.content || '';
+  if (fullText.length > MSG_PREVIEW_MAX) {
+    body.textContent = fullText.slice(0, MSG_PREVIEW_MAX) + '\u2026';
+    body.title = fullText;
+  } else {
+    body.textContent = fullText;
+  }
+  li.appendChild(body);
+
+  return li;
+}
+
+/**
+ * Add or remove the "Load more" button at the bottom of the list.
+ * @param {HTMLUListElement} list
+ * @param {boolean} hasMore
+ */
+function _updateLoadMoreBtn(list, hasMore) {
+  const existing = document.getElementById('dr-load-more-btn');
+  if (existing) {
+    const item = existing.closest('li');
+    if (item) item.remove();
+  }
+  if (hasMore) {
+    const li = document.createElement('li');
+    li.className = 'dr-load-more-item';
+    const btn = document.createElement('button');
+    btn.id = 'dr-load-more-btn';
+    btn.className = 'dr-load-more-btn';
+    btn.textContent = 'Load more';
+    li.appendChild(btn);
+    list.appendChild(li);
+  }
+}
+
 // Expose to other content scripts in the same scope
 if (typeof module !== "undefined") {
-  module.exports = { renderGuilds, renderChannels, renderStatus, setScrapeButtonState };
+  module.exports = { renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages };
 }

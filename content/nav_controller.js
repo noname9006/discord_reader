@@ -7,7 +7,7 @@
  */
 
 /* global SELECTORS, readGuilds, readChannels, getActiveGuildId, getActiveChannelId,
-          renderGuilds, renderChannels, renderStatus, DB, ScrapeController */
+          renderGuilds, renderChannels, renderStatus, renderMessageViewer, appendMessages, DB, ScrapeController */
 
 const NavController = (() => {
   // Internal map: guild/channel ID → DOM element reference (for click navigation)
@@ -22,6 +22,9 @@ const NavController = (() => {
 
   // Debounce timer for MutationObserver
   let _mutationDebounceTimer = null;
+
+  // Handler for the "Load more" button — stored so it can be replaced
+  let _loadMoreHandler = null;
 
   // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -106,17 +109,25 @@ const NavController = (() => {
       const li = e.target.closest('li[data-channel-id]');
       if (!li) return;
       const channelId = li.dataset.channelId;
-      if (channelId === getActiveChannelId()) {
-        ScrapeController.start({ defaultDays: 7 });
-      } else {
+
+      // Always load and display saved messages for the clicked channel
+      _loadAndShowMessages(channelId, 0);
+
+      // Navigate only if it's a different channel
+      if (channelId !== getActiveChannelId()) {
         _navigateToChannel(channelId);
-        // Allow 800ms for Discord to complete navigation before scraping
-        setTimeout(() => {
-          ScrapeController.start({ defaultDays: 7 });
-        }, 800);
       }
     };
     list.addEventListener('click', list._navDelegateHandler);
+
+    // If there is a currently active channel, load its messages
+    if (activeChannelId) {
+      try {
+        _loadAndShowMessages(activeChannelId, 0);
+      } catch (err) {
+        console.error('[Discord Reader] _loadAndShowMessages error:', err);
+      }
+    }
   }
 
   /**
@@ -231,6 +242,46 @@ const NavController = (() => {
 
     // Also hook popstate for back/forward navigation
     window.addEventListener('popstate', _checkUrlChange);
+  }
+
+  /**
+   * Load a page of saved messages from DB and render them in the overlay.
+   * If offset === 0, calls renderMessageViewer (replaces content).
+   * If offset > 0, calls appendMessages (appends to existing list).
+   *
+   * @param {string} channelId
+   * @param {number} offset
+   */
+  async function _loadAndShowMessages(channelId, offset) {
+    const PAGE = 50;
+    try {
+      await DB.init();
+      const messages = await DB.getMessagesPage(channelId, offset, PAGE);
+      const total = await DB.getMessageCountByChannel(channelId);
+      const hasMore = (offset + messages.length) < total;
+
+      if (offset === 0) {
+        renderMessageViewer(messages, hasMore);
+      } else {
+        appendMessages(messages, hasMore);
+      }
+
+      // Wire "Load more" button
+      const btn = document.getElementById('dr-load-more-btn');
+      if (btn) {
+        if (_loadMoreHandler) {
+          btn.removeEventListener('click', _loadMoreHandler);
+        }
+        _loadMoreHandler = () => {
+          _loadAndShowMessages(channelId, offset + messages.length);
+        };
+        btn.addEventListener('click', _loadMoreHandler);
+      } else {
+        _loadMoreHandler = null;
+      }
+    } catch (err) {
+      console.error('[Discord Reader] _loadAndShowMessages error:', err);
+    }
   }
 
   function _setupMutationObserver() {
