@@ -26,6 +26,9 @@ const NavController = (() => {
   // Handler for the "Load more" button — stored so it can be replaced
   let _loadMoreHandler = null;
 
+  // popstate listener reference — stored so it can be removed in stopObserving
+  let _popstateHandler = null;
+
   // ── Public API ──────────────────────────────────────────────────────────────
 
   /**
@@ -73,6 +76,7 @@ const NavController = (() => {
    */
   async function refreshChannels(guildId) {
     const targetGuildId = guildId || getActiveGuildId();
+    if (!targetGuildId) return;
     const channels = readChannels(targetGuildId);
     const activeChannelId = getActiveChannelId();
 
@@ -115,6 +119,11 @@ const NavController = (() => {
 
       // Navigate only if it's a different channel
       if (channelId !== getActiveChannelId()) {
+        // Warn and stop any in-progress scrape before navigating
+        if (ScrapeController.isRunning()) {
+          ScrapeController.stop();
+          renderStatus('Scrape stopped — navigated to new channel.');
+        }
         _navigateToChannel(channelId);
       }
     };
@@ -162,6 +171,10 @@ const NavController = (() => {
     if (_mutationDebounceTimer !== null) {
       clearTimeout(_mutationDebounceTimer);
       _mutationDebounceTimer = null;
+    }
+    if (_popstateHandler !== null) {
+      window.removeEventListener('popstate', _popstateHandler);
+      _popstateHandler = null;
     }
   }
 
@@ -240,8 +253,9 @@ const NavController = (() => {
     // Poll URL every 750ms — lightweight since it's just a string comparison
     _urlPollInterval = setInterval(_checkUrlChange, 750);
 
-    // Also hook popstate for back/forward navigation
-    window.addEventListener('popstate', _checkUrlChange);
+    // Also hook popstate for back/forward navigation — store reference for cleanup
+    _popstateHandler = _checkUrlChange;
+    window.addEventListener('popstate', _popstateHandler);
   }
 
   /**
@@ -281,6 +295,13 @@ const NavController = (() => {
       }
     } catch (err) {
       console.error('[Discord Reader] _loadAndShowMessages error:', err);
+      const msgList = document.getElementById('dr-msg-list');
+      if (msgList) {
+        msgList.innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = '⚠ Could not load messages — see console for details.';
+        msgList.appendChild(li);
+      }
     }
   }
 

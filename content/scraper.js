@@ -112,11 +112,13 @@ function scrapeVisibleMessages() {
     let authorName = _text(SELECTORS.messageAuthor, article);
     if (!authorName) {
       // ⚠️ Grouped messages don't repeat the author. Walk backward through
-      // siblings to find the last message that had one.
+      // siblings to find the last message that had one (cap at 10 to avoid O(n)).
       let prev = article.previousElementSibling;
-      while (prev && !authorName) {
+      let walkback = 0;
+      while (prev && !authorName && walkback < 10) {
         authorName = _text(SELECTORS.messageAuthor, prev);
         prev = prev.previousElementSibling;
+        walkback++;
       }
     }
     if (!authorName) {

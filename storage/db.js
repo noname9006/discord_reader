@@ -113,6 +113,7 @@ const DB = (() => {
    * @returns {Promise<void>}
    */
   async function saveGuild(guild) {
+    if (!_db) await init();
     const record = { ...guild, savedAt: new Date().toISOString() };
     await _promisify(_rwStore("guilds").put(record));
   }
@@ -123,6 +124,7 @@ const DB = (() => {
    * @returns {Promise<void>}
    */
   async function saveChannel(channel) {
+    if (!_db) await init();
     const record = { ...channel, savedAt: new Date().toISOString() };
     await _promisify(_rwStore("channels").put(record));
   }
@@ -138,6 +140,7 @@ const DB = (() => {
    */
   async function saveMessages(messages) {
     if (!messages || messages.length === 0) return;
+    if (!_db) await init();
 
     const store = _rwStore("messages");
     const now = new Date().toISOString();
@@ -240,6 +243,11 @@ const DB = (() => {
 
   /**
    * Return a page of messages for a channel, sorted newest-first.
+   *
+   * NOTE: This fetches all messages for the channel before slicing. For
+   * channels with a large number of saved messages this may be slow. A future
+   * optimisation would add a compound index on [channelId, timestamp] to
+   * enable efficient cursor-based pagination without loading every record.
    *
    * @param {string} channelId
    * @param {number} offset   — number of records to skip
