@@ -45,13 +45,15 @@ discord_reader/
 │   ├── nav_reader.js           # Reads guilds and channels from live Discord DOM
 │   ├── nav_controller.js       # Populates panel panes, click-to-navigate, MutationObserver
 │   ├── exporter.js             # Exports saved messages to JSON or CSV download
+│   ├── health_check.js         # Selector health diagnostics (DOM query runner)
 │   └── discord_selectors.js    # All Discord CSS selectors — single place to fix
 ├── storage/
 │   └── db.js                   # IndexedDB wrapper (guilds / channels / messages)
 ├── ui/
 │   ├── panel.html              # Reference template (not loaded directly)
 │   ├── panel.css               # Overlay styles (injected as content-script CSS)
-│   └── panel.js                # Render helpers: renderGuilds / renderChannels / renderStatus / setScrapeButtonState
+│   ├── panel.js                # Render helpers: renderGuilds / renderChannels / renderStatus / setScrapeButtonState
+│   └── health_panel.js         # Renders health check results into the Health pane
 └── icons/
     └── icon128.png             # Extension icon (128×128)
 ```
@@ -69,7 +71,17 @@ discord_reader/
 | **5 — Export Saved Messages to File** | ✅ Complete | Export JSON/CSV buttons in the Messages pane; `content/exporter.js` fetches messages from IndexedDB and triggers a browser download |
 | **6 — Selector Health Check** | ✅ Complete | Selector Health Check — live DOM diagnostics, tab-switched health pane, green/yellow/red per selector |
 | **7 — Stored Data Viewer** | ✅ Complete | Message list in overlay panel; tab switcher (Messages \| Controls); paginated load (50/page); auto-refresh on scrape complete |
-| **8 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+| **8 — Polish** | ✅ Complete | Error handling, rate limiting, edge cases — `_isStopped` flag, null guildId guard, DB-write user warning, adaptive scroll delay, `maxSteps` cap, lazy DB init, export error handling, nav error state, popstate cleanup, mid-scrape navigation warning, author walkback cap, empty-state placeholder |
+
+### Phase 8 added
+- `content/scrape_controller.js`: `_isStopped` module-level flag — set in `stop()`, checked at the top of `onBatch`, `onComplete`, and `onError` to prevent double-teardown; null `guildId` guard — skips `DB.saveGuild` in DM contexts (logs a warning instead); `onBatch` catch block now calls `renderStatus('⚠ DB write error — some messages may not have been saved.')` so the user sees feedback; `isRunning()` getter exposed on the public API
+- `content/scroller.js`: Adaptive step delay — if a batch returns 0 messages or the same IDs as the previous batch, `_stepDelay` is doubled (capped at 3000 ms); reset to `_baseStepDelay` on any batch with new content; `maxSteps` constructor option (default 2000) — increments `_stepCount` each step and calls `onComplete()` when the cap is reached, preventing infinite loops on stuck virtual scroll containers
+- `storage/db.js`: Lazy `init()` guard added to `saveGuild`, `saveChannel`, and `saveMessages` — each calls `await init()` if `_db` is null, making the API self-initialising; `getMessagesPage` annotated with a JSDoc note documenting the fetch-all performance trade-off as a known concern for future optimisation
+- `content/exporter.js`: `DB.getMessagesByChannel` wrapped in try/catch — on failure calls `renderStatus('Export failed — could not read messages from storage.')` and returns; `_triggerDownload` now uses try/finally so `removeChild` and `revokeObjectURL` always run even if `.click()` throws
+- `content/nav_controller.js`: `_loadAndShowMessages` catch block now calls `renderMessageViewer([], false)` and injects a `<li>` with `'⚠ Could not load messages — see console for details.'` into `#dr-msg-list`; `_popstateHandler` reference stored and removed in `stopObserving()` to fix the memory leak; `refreshChannels` guards against undefined `targetGuildId` with an early return; channel click handler checks `ScrapeController.isRunning()` before navigating — if true, calls `ScrapeController.stop()` and updates status
+- `content/scraper.js`: Author walkback loop capped at 10 iterations to prevent O(n) traversal on large virtual lists
+- `content/overlay.js`: `#dr-msg-list` initialised with a placeholder `<li>` (`"← Select a channel to view saved messages."`) so the Messages tab is never blank on first open
+- `readme.md`: Phase 8 marked ✅ Complete; project structure tree updated to include `content/health_check.js` and `ui/health_panel.js` (added in Phase 6 but missing from the tree)
 
 ### Phase 7 added
 - `storage/db.js`: `DB.getMessagesPage(channelId, offset, limit)` — returns a page of messages sorted newest-first for paginated display

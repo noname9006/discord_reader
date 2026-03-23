@@ -29,6 +29,7 @@ class ScrollController {
    *   — return true to stop (e.g. reached the last saved message)
    * @param {number} [options.stepDelay=600]         — ms between scroll steps
    * @param {number} [options.scrollStepPx=800]      — pixels to scroll per step
+   * @param {number} [options.maxSteps=2000]         — hard cap on total steps to prevent infinite loops
    */
   constructor({
     onBatch = () => {},
@@ -37,16 +38,21 @@ class ScrollController {
     stopCondition = () => false,
     stepDelay = 600,
     scrollStepPx = 800,
+    maxSteps = 2000,
   } = {}) {
     this._onBatch = onBatch;
     this._onComplete = onComplete;
     this._onError = onError;
     this._stopCondition = stopCondition;
     this._stepDelay = stepDelay;
+    this._baseStepDelay = stepDelay;
     this._scrollStepPx = scrollStepPx;
+    this._maxSteps = maxSteps;
 
     this._running = false;
     this._timeoutId = null;
+    this._stepCount = 0;
+    this._prevBatchIds = null;
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -55,6 +61,9 @@ class ScrollController {
   start() {
     if (this._running) return;
     this._running = true;
+    this._stepCount = 0;
+    this._prevBatchIds = null;
+    this._stepDelay = this._baseStepDelay;
     this._step();
   }
 
@@ -109,6 +118,26 @@ class ScrollController {
         try {
           const messages = scrapeVisibleMessages();
           await this._onBatch(messages);
+
+          // Adaptive delay: back off on empty or stale batches
+          // Use first+last ID as a lightweight staleness check
+          const firstId = messages.length > 0 ? messages[0].id : '';
+          const lastId = messages.length > 0 ? messages[messages.length - 1].id : '';
+          const currentIds = firstId + '|' + lastId;
+          if (messages.length === 0 || currentIds === this._prevBatchIds) {
+            this._stepDelay = Math.min(this._stepDelay * 2, 3000);
+          } else {
+            this._stepDelay = this._baseStepDelay;
+          }
+          this._prevBatchIds = currentIds;
+
+          // maxSteps guard — prevent infinite loop on stuck virtual scroll
+          this._stepCount += 1;
+          if (this._stepCount >= this._maxSteps) {
+            this._running = false;
+            this._onComplete();
+            return;
+          }
 
           // Check if we've reached the stop condition
           if (this._stopCondition(messages) || container.scrollTop <= 0) {

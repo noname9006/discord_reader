@@ -181,6 +181,16 @@ function _buildPanel() {
   const msgList = document.createElement("ul");
   msgList.className = "dr-list dr-msg-list";
   msgList.id = "dr-msg-list";
+
+  // Initial placeholder shown before any channel is selected
+  const placeholderLi = document.createElement("li");
+  const placeholderSpan = document.createElement("span");
+  placeholderSpan.style.fontStyle = "italic";
+  placeholderSpan.style.color = "#72767d";
+  placeholderSpan.textContent = "← Select a channel to view saved messages.";
+  placeholderLi.appendChild(placeholderSpan);
+  msgList.appendChild(placeholderLi);
+
   msgViewMessages.appendChild(msgList);
 
   messagesPane.appendChild(msgViewMessages);

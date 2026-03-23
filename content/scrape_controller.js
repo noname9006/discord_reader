@@ -21,6 +21,9 @@ const ScrapeController = (() => {
   /** Resolves the Promise returned by start() when the scrape ends. */
   let _resolveStart = null;
 
+  /** Prevents double-teardown if stop() is called while onComplete/onError fires. */
+  let _isStopped = false;
+
   /**
    * Start a scrape of the currently visible channel.
    * Returns a Promise that resolves when the scrape completes, errors, or is
@@ -42,7 +45,11 @@ const ScrapeController = (() => {
     await DB.init();
 
     // ── 3. Save guild + channel ───────────────────────────────────────────────
-    await DB.saveGuild({ id: guildId, name: guildName });
+    if (guildId) {
+      await DB.saveGuild({ id: guildId, name: guildName });
+    } else {
+      console.warn("[Discord Reader] No guildId (DM context) — skipping saveGuild.");
+    }
     await DB.saveChannel({ id: channelId, guildId, name: channelName });
 
     // ── 4. Determine cutoff timestamp ─────────────────────────────────────────
@@ -61,6 +68,7 @@ const ScrapeController = (() => {
     // ── 5. Tracking state ─────────────────────────────────────────────────────
     let totalSaved = 0;
     const seenIds = new Set();
+    _isStopped = false;
 
     // ── 6. Teardown — called on complete, error, or manual stop ──────────────
     function _teardown() {
@@ -79,6 +87,7 @@ const ScrapeController = (() => {
 
       _scroller = new ScrollController({
         onBatch: async (messages) => {
+          if (_isStopped) return;
           const newMessages = messages.filter(
             (m) => m && m.id && m.timestamp && !seenIds.has(m.id)
           );
@@ -93,11 +102,13 @@ const ScrapeController = (() => {
               }
             } catch (err) {
               console.error("[Discord Reader] DB save error:", err);
+              renderStatus("⚠ DB write error — some messages may not have been saved.");
             }
           }
         },
 
         onComplete: () => {
+          if (_isStopped) return;
           renderStatus(`Done — ${totalSaved} messages saved for #${channelName}`);
           _teardown();
           NavController.refreshChannels().catch(err =>
@@ -106,6 +117,7 @@ const ScrapeController = (() => {
         },
 
         onError: (err) => {
+          if (_isStopped) return;
           console.error("[Discord Reader] Scrape error:", err);
           renderStatus(`Error: ${err.message}`);
           _teardown();
@@ -127,6 +139,7 @@ const ScrapeController = (() => {
    * Resolves the Promise returned by start() so the caller can reset its state.
    */
   function stop() {
+    _isStopped = true;
     if (_scroller) {
       _scroller.stop();
       _scroller = null;
@@ -139,7 +152,15 @@ const ScrapeController = (() => {
     }
   }
 
-  return { start, stop };
+  /**
+   * Returns true if a scrape is currently in progress.
+   * @returns {boolean}
+   */
+  function isRunning() {
+    return _scroller !== null;
+  }
+
+  return { start, stop, isRunning };
 })();
 
 // Expose to other content scripts in the same scope

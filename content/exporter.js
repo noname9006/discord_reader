@@ -24,7 +24,15 @@ async function exportCurrentChannel(format) {
     return;
   }
 
-  const messages = await DB.getMessagesByChannel(channelId);
+  let messages;
+  try {
+    messages = await DB.getMessagesByChannel(channelId);
+  } catch (err) {
+    console.error('[Discord Reader] Export DB read error:', err);
+    renderStatus('Export failed — could not read messages from storage.');
+    return;
+  }
+
   if (!messages || messages.length === 0) {
     renderStatus('No saved messages to export for this channel.');
     return;
@@ -74,9 +82,12 @@ function _triggerDownload(content, filename, mimeType) {
   a.download = filename;
   a.style.display = 'none';
   document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  try {
+    a.click();
+  } finally {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 }
 
 /**
