@@ -11,7 +11,7 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, ScrapeController, NavController */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
@@ -28,9 +28,16 @@ function toggleOverlay() {
   if (!_panelRoot) {
     _panelRoot = _buildPanel();
     document.body.appendChild(_panelRoot);
+    NavController.startObserving();
   }
 
   _panelRoot.classList.toggle("hidden");
+
+  // Refresh nav panes whenever the panel is shown
+  if (!_panelRoot.classList.contains("hidden")) {
+    NavController.refreshGuilds();
+    NavController.refreshChannels();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
