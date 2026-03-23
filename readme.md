@@ -42,6 +42,7 @@ discord_reader/
 │   ├── scraper.js              # Reads visible messages from the Discord DOM
 │   ├── scroller.js             # Auto-scroll controller (walks chat upward)
 │   ├── scrape_controller.js    # Orchestrates scrape flow (scraper + scroller + DB + UI)
+│   ├── queue_controller.js     # Multi-channel scrape queue (sequential, stoppable)
 │   ├── nav_reader.js           # Reads guilds and channels from live Discord DOM
 │   ├── nav_controller.js       # Populates panel panes, click-to-navigate, MutationObserver
 │   ├── exporter.js             # Exports saved messages to JSON or CSV download
@@ -72,6 +73,15 @@ discord_reader/
 | **6 — Selector Health Check** | ✅ Complete | Selector Health Check — live DOM diagnostics, tab-switched health pane, green/yellow/red per selector |
 | **7 — Stored Data Viewer** | ✅ Complete | Message list in overlay panel; tab switcher (Messages \| Controls); paginated load (50/page); auto-refresh on scrape complete |
 | **8 — Polish** | ✅ Complete | Error handling, rate limiting, edge cases — `_isStopped` flag, null guildId guard, DB-write user warning, adaptive scroll delay, `maxSteps` cap, lazy DB init, export error handling, nav error state, popstate cleanup, mid-scrape navigation warning, author walkback cap, empty-state placeholder |
+| **9 — Multi-channel Scrape Queue** | ✅ Complete | Channel selection checkboxes in the Channels pane; "Scrape selected" and "Scrape all channels" queue buttons; sequential per-channel scrape with live progress; stop mid-queue support |
+
+### Phase 9 added
+- `content/queue_controller.js` (new): `QueueController` IIFE module — `startQueue(channels, mode)` iterates an array of `{ id, name, guildId }` objects sequentially: navigates to each channel via `NavController.navigateToChannel`, waits 1200 ms for Discord to render, runs `ScrapeController.start({ defaultDays: 7 })`, then refreshes channel badges; per-channel errors are caught and logged without aborting the queue; `stop()` sets a `_stopRequested` flag checked between iterations and stops any in-progress scrape; `isRunning()` exposes queue state; `setQueueButtonState` called on start/teardown
+- `content/nav_controller.js`: module-level `_selectedChannelIds` Set tracks which channels are checked; `_channelDataMap` Map stores `{ id, name, guildId }` for every rendered channel; `_lastRenderedGuildId` clears the selection set on guild switch; click delegation handler distinguishes checkbox clicks (toggle selection, update "Scrape selected" enabled state) from label/row clicks (navigate + load messages); `navigateToChannel(_navigateToChannel)`, `getSelectedChannels()`, and `getAllChannels()` added to the public API
+- `ui/panel.js`: `renderChannels()` updated — each `<li>` now contains an `<input type="checkbox" class="dr-ch-checkbox">` (checked when `channel.selected === true`, `tabIndex=-1`) followed by a `<span class="dr-ch-label">` wrapping the channel name and badge; `setQueueButtonState(running, mode)` toggles text and disabled state of both queue buttons; `setSelectedScrapeButtonEnabled(enabled)` enables/disables the "Scrape selected" button when the queue is not running; both functions exported
+- `content/overlay.js`: queue action row (`div.dr-queue-row`) with `button#dr-scrape-selected-btn` (disabled by default) and `button#dr-scrape-all-btn` added below the export row in `msgViewControls`; click handlers call `QueueController.stop()` when running or `QueueController.startQueue()` with the appropriate channel list and mode; `/* global */` comment updated to include `QueueController`
+- `ui/panel.css`: styles for `.dr-ch-checkbox` (12×12 px, `accent-color: #5865f2`), `.dr-ch-label` (flex, ellipsis), `.dr-channels-pane .dr-list li` (flex row), `.dr-queue-row` (flex row, 6 px gap), `.dr-queue-btn` (green-tinted, hover/active/disabled states)
+- `manifest.json`: `content/queue_controller.js` added to the content scripts load order after `content/scrape_controller.js` and before `content/nav_reader.js`
 
 ### Phase 8 added
 - `content/scrape_controller.js`: `_isStopped` module-level flag — set in `stop()`, checked at the top of `onBatch`, `onComplete`, and `onError` to prevent double-teardown; null `guildId` guard — skips `DB.saveGuild` in DM contexts (logs a warning instead); `onBatch` catch block now calls `renderStatus('⚠ DB write error — some messages may not have been saved.')` so the user sees feedback; `isRunning()` getter exposed on the public API

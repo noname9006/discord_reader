@@ -11,7 +11,7 @@
  * Exports: toggleOverlay()
  */
 
-/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages, ScrapeController, NavController, exportCurrentChannel, runAndRenderHealthCheck */
+/* global renderGuilds, renderChannels, renderStatus, setScrapeButtonState, renderMessageViewer, appendMessages, ScrapeController, NavController, exportCurrentChannel, runAndRenderHealthCheck, QueueController */
 
 // Module-level reference to the root panel element (null until first call)
 let _panelRoot = null;
@@ -242,6 +242,41 @@ function _buildPanel() {
   exportRow.appendChild(exportJsonBtn);
   exportRow.appendChild(exportCsvBtn);
   msgViewControls.appendChild(exportRow);
+
+  // Queue action row — Scrape selected / Scrape all channels
+  const queueRow = document.createElement("div");
+  queueRow.className = "dr-queue-row";
+
+  const scrapeSelectedBtn = document.createElement("button");
+  scrapeSelectedBtn.id = "dr-scrape-selected-btn";
+  scrapeSelectedBtn.className = "dr-queue-btn";
+  scrapeSelectedBtn.textContent = "⚡ Scrape selected";
+  scrapeSelectedBtn.disabled = true; // enabled once channels are selected
+  scrapeSelectedBtn.addEventListener("click", () => {
+    if (QueueController.isRunning()) {
+      QueueController.stop();
+    } else {
+      const selected = NavController.getSelectedChannels();
+      if (selected.length === 0) return;
+      QueueController.startQueue(selected, "selected");
+    }
+  });
+
+  const scrapeAllBtn = document.createElement("button");
+  scrapeAllBtn.id = "dr-scrape-all-btn";
+  scrapeAllBtn.className = "dr-queue-btn";
+  scrapeAllBtn.textContent = "⚡ Scrape all channels";
+  scrapeAllBtn.addEventListener("click", () => {
+    if (QueueController.isRunning()) {
+      QueueController.stop();
+    } else {
+      QueueController.startQueue(NavController.getAllChannels(), "all");
+    }
+  });
+
+  queueRow.appendChild(scrapeSelectedBtn);
+  queueRow.appendChild(scrapeAllBtn);
+  msgViewControls.appendChild(queueRow);
 
   messagesPane.appendChild(msgViewControls);
 
