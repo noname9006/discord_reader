@@ -99,17 +99,8 @@ class ScrollController {
         return;
       }
 
-      // Scroll upward by one step
-      container.scrollTop -= this._scrollStepPx;
-
-      // Also dispatch a wheel event so Discord's virtual list reacts
-      container.dispatchEvent(
-        new WheelEvent("wheel", {
-          deltaY: -this._scrollStepPx,
-          bubbles: true,
-          cancelable: true,
-        })
-      );
+      // Scroll upward smoothly, mimicking a real mousewheel gesture
+      await this._smoothScroll(container, this._scrollStepPx);
 
       // Give the DOM a moment to render newly loaded messages before scraping
       this._timeoutId = setTimeout(async () => {
@@ -156,6 +147,49 @@ class ScrollController {
     } catch (err) {
       this._onError(err);
       this.stop();
+    }
+  }
+
+  /**
+   * Scrolls the container upward by totalDistance pixels using an ease-in/out
+   * curve, randomised sub-step deltas, variable inter-step delays, and
+   * occasional tiny pauses — mimicking a real mousewheel gesture.
+   *
+   * @param {Element} container
+   * @param {number}  totalDistance  Pixels to scroll upward.
+   */
+  async _smoothScroll(container, totalDistance) {
+    const steps = 30;
+    for (let i = 0; i < steps; i++) {
+      if (!this._running) return;
+
+      const t     = i / (steps - 1);
+      const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
+      const tNext = (i + 1) / steps;
+      const eNext = 0.5 - 0.5 * Math.cos(Math.PI * tNext);
+      let   delta = (eNext - eased) * totalDistance;
+
+      // ±10 % randomness so no two sub-steps are identical
+      delta *= 0.9 + Math.random() * 0.2;
+
+      // Dispatch a realistic WheelEvent (deltaY negative = scroll up)
+      container.dispatchEvent(new WheelEvent('wheel', {
+        deltaY: -delta,
+        deltaMode: 0,       // DOM_DELTA_PIXEL
+        bubbles: true,
+        cancelable: true,
+      }));
+
+      // Also nudge scrollTop so non-React fallback containers move too
+      container.scrollTop -= delta;
+
+      // Variable inter-step delay (10–22 ms)
+      let delay = 10 + Math.random() * 12;
+
+      // Occasional tiny pause (~5 % chance, +20–40 ms)
+      if (Math.random() < 0.05) delay += 20 + Math.random() * 20;
+
+      await new Promise(r => setTimeout(r, delay));
     }
   }
 
