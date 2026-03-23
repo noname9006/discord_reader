@@ -39,8 +39,7 @@ function renderGuilds(guilds) {
       // Highlight active item
       list.querySelectorAll("li").forEach((el) => el.classList.remove("active"));
       item.classList.add("active");
-      // Phase 3+ will load channels for this guild
-      console.log("[Discord Reader] Guild selected:", guild.id, guild.name);
+      // Navigation handled by NavController (nav_controller.js)
     });
 
     list.appendChild(item);
@@ -76,12 +75,7 @@ function renderChannels(channels) {
       // Highlight active item
       list.querySelectorAll("li").forEach((el) => el.classList.remove("active"));
       item.classList.add("active");
-      // Phase 4+ will trigger scraping for this channel
-      console.log(
-        "[Discord Reader] Channel selected:",
-        channel.id,
-        channel.name
-      );
+      // Navigation handled by NavController (nav_controller.js)
     });
 
     list.appendChild(item);

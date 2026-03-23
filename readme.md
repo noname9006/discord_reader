@@ -42,6 +42,8 @@ discord_reader/
 │   ├── scraper.js              # Reads visible messages from the Discord DOM
 │   ├── scroller.js             # Auto-scroll controller (walks chat upward)
 │   ├── scrape_controller.js    # Orchestrates scrape flow (scraper + scroller + DB + UI)
+│   ├── nav_reader.js           # Reads guilds and channels from live Discord DOM
+│   ├── nav_controller.js       # Populates panel panes, click-to-navigate, MutationObserver
 │   └── discord_selectors.js    # All Discord CSS selectors — single place to fix
 ├── storage/
 │   └── db.js                   # IndexedDB wrapper (guilds / channels / messages)
@@ -61,11 +63,20 @@ discord_reader/
 |---|---|---|
 | **1 — Skeleton** | ✅ Complete | Manifest, content script, hotkey, overlay toggle, all module stubs |
 | **2 — Wire Scraper + Scroller to Storage** | ✅ Complete | `scrape_controller.js` orchestrates scrape flow; scrape button wired with live progress and stop support; `DB.getLastMessageId()` added |
-| **3 — Scraper** | 🔜 Upcoming | Read guild/channel/message data from live Discord DOM |
+| **3 — Populate Guilds & Channels Panes** | ✅ Complete | `nav_reader.js` + `nav_controller.js`; Guilds and Channels panes populated from live Discord DOM on overlay open; click-to-navigate; MutationObserver auto-refresh |
 | **4 — Scroller** | 🔜 Upcoming | Auto-scroll, stop conditions (date / last saved ID) |
 | **5 — Panel UI** | 🔜 Upcoming | Live progress display, guild/channel lists |
 | **6 — Wiring** | 🔜 Upcoming | End-to-end: scrape → scroll → save → display |
 | **7 — Polish** | 🔜 Upcoming | Error handling, rate limiting, edge cases |
+
+### Phase 3 added
+- `content/nav_reader.js` — reads guilds and channels from live Discord DOM
+- `content/nav_controller.js` — populates panel panes, handles click-to-navigate, MutationObserver auto-refresh
+- Guilds pane now populated on overlay open
+- Channels pane now populated on overlay open, filtered to current guild
+- Clicking guild navigates Discord and refreshes channels pane
+- Clicking channel navigates Discord to that channel
+- URL polling (750ms) + MutationObserver (400ms debounce) keeps panes in sync with Discord navigation
 
 ### Phase 2 added
 - `content/scrape_controller.js` — orchestrates scrape flow (scraper + scroller + DB + UI)
